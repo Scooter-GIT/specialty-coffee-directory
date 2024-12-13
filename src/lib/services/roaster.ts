@@ -2,6 +2,7 @@ import { prisma } from '@/lib/prisma';
 import { roasterSchema, searchQuerySchema, type RoasterInput } from '@/lib/validations/roaster';
 import { ValidationError } from '@/lib/exceptions';
 import { slugify } from '@/lib/utils';
+import { Prisma } from '@prisma/client';
 
 // MVP: Basic roaster operations
 export async function createRoaster(data: RoasterInput) {
@@ -27,24 +28,36 @@ export async function searchRoasters(params: Record<string, unknown>) {
   try {
     const { query, page = 1 } = searchQuerySchema.parse(params);
     const limit = 20; // MVP: Fixed limit
+
+    const whereCondition: Prisma.RoasterWhereInput = {};
     
-    const where = query
-      ? {
-          OR: [
-            { name: { contains: query, mode: 'insensitive' } },
-            { description: { contains: query, mode: 'insensitive' } }
-          ]
+    if (query) {
+      whereCondition.OR = [
+        {
+          name: {
+            contains: query,
+            mode: Prisma.QueryMode.INSENSITIVE
+          }
+        },
+        {
+          description: {
+            contains: query,
+            mode: Prisma.QueryMode.INSENSITIVE
+          }
         }
-      : {};
+      ];
+    }
 
     const [roasters, total] = await Promise.all([
       prisma.roaster.findMany({
-        where,
+        where: whereCondition,
         skip: (page - 1) * limit,
         take: limit,
         orderBy: { name: 'asc' }
       }),
-      prisma.roaster.count({ where })
+      prisma.roaster.count({
+        where: whereCondition
+      })
     ]);
 
     return {
