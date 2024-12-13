@@ -12,16 +12,21 @@ export const prisma =
 
 if (process.env.NODE_ENV !== 'production') globalForPrisma.prisma = prisma;
 
-// Error handling
-prisma.$on('error', (e) => {
-  console.error('Prisma Error:', e);
+// Error handling with proper typing
+prisma.$use(async (params, next) => {
+  try {
+    return await next(params);
+  } catch (error) {
+    console.error('Prisma Error:', error);
+    throw error;
+  }
 });
 
-// Connection handling
+// Connection handling with proper error typing
 prisma.$connect()
   .then(() => {
     console.log('Successfully connected to database');
   })
-  .catch((e) => {
-    console.error('Failed to connect to database:', e);
+  .catch((error: Error) => {
+    console.error('Failed to connect to database:', error);
   });
