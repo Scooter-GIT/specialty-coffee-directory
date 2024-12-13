@@ -1,0 +1,42 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Roaster {
+  id            String      @id @default(cuid())
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
+  name          String
+  slug          String      @unique
+  website       String
+  description   String?
+  address       String
+  city          String
+  state         String
+  zipCode       String
+  latitude      Float?
+  longitude     Float?
+  phone         String?
+  email         String?
+  
+  roastingStyles String[]
+  beanOrigins    String[]
+  clickCount     Int        @default(0)
+  featured       Boolean    @default(false)
+  searchLog      SearchLog[]
+}
+
+model SearchLog {
+  id        String   @id @default(cuid())
+  createdAt DateTime @default(now())
+  query     String
+  filters   Json?
+  roasterId String?
+  clicked   Boolean  @default(false)
+  roaster   Roaster? @relation(fields: [roasterId], references: [id])
+}
