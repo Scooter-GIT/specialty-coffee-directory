@@ -36,13 +36,13 @@ export async function searchRoasters(params: Record<string, unknown>) {
         {
           name: {
             contains: query,
-            mode: Prisma.QueryMode.INSENSITIVE
+            mode: 'insensitive'
           }
         },
         {
           description: {
             contains: query,
-            mode: Prisma.QueryMode.INSENSITIVE
+            mode: 'insensitive'
           }
         }
       ];
