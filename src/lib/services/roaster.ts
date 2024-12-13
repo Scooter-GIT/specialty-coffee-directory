@@ -1,6 +1,7 @@
 import { prisma } from '@/lib/prisma';
 import { roasterSchema, searchQuerySchema, type RoasterInput } from '@/lib/validations/roaster';
 import { ValidationError, DatabaseError, NotFoundError } from '@/lib/exceptions';
+import { Prisma } from '@prisma/client';
 import { slugify } from '@/lib/utils';
 
 export async function createRoaster(data: RoasterInput) {
@@ -43,21 +44,28 @@ export async function updateRoaster(id: string, data: Partial<RoasterInput>) {
 
 export async function searchRoasters(params: Record<string, unknown>) {
   try {
-    const { query, city, state, roastingStyle, page, limit } = searchQuerySchema.parse(params);
+    const { query, city, state, roastingStyle, page = 1, limit = 20 } = searchQuerySchema.parse(params);
     
-    const where = {
-      AND: [
-        query ? {
-          OR: [
-            { name: { contains: query, mode: 'insensitive' } },
-            { description: { contains: query, mode: 'insensitive' } }
-          ]
-        } : {},
-        city ? { city: { equals: city, mode: 'insensitive' } } : {},
-        state ? { state: { equals: state.toUpperCase() } } : {},
-        roastingStyle ? { roastingStyles: { has: roastingStyle } } : {}
-      ]
-    };
+    const where: Prisma.RoasterWhereInput = {};
+    
+    if (query) {
+      where.OR = [
+        { name: { contains: query, mode: 'insensitive' } },
+        { description: { contains: query, mode: 'insensitive' } }
+      ];
+    }
+    
+    if (city) {
+      where.city = { equals: city, mode: 'insensitive' };
+    }
+    
+    if (state) {
+      where.state = { equals: state.toUpperCase() };
+    }
+    
+    if (roastingStyle) {
+      where.roastingStyles = { has: roastingStyle };
+    }
 
     const [roasters, total] = await Promise.all([
       prisma.roaster.findMany({
