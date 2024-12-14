@@ -17,30 +17,35 @@ export function SearchContainer() {
   const [filters, setFilters] = useState<SearchFiltersType>({});
 
   const handleSearch = (query: string) => {
-    const params = new URLSearchParams(searchParams);
+    // Create a new URLSearchParams object with all current parameters
+    const params = new URLSearchParams();
+    
+    // Add search query if exists
     if (query) {
       params.set('q', query);
-    } else {
-      params.delete('q');
     }
     
-    // Add filters to URL
-    Object.entries(filters).forEach(([key, value]) => {
-      if (value && (typeof value === 'string' || value.length > 0)) {
-        params.set(key, Array.isArray(value) ? value.join(',') : value);
-      } else {
-        params.delete(key);
-      }
-    });
+    // Add filters
+    if (filters.roastingStyles?.length) {
+      params.set('roastingStyles', filters.roastingStyles.join(','));
+    }
+    if (filters.state) {
+      params.set('state', filters.state);
+    }
+    if (filters.city) {
+      params.set('city', filters.city);
+    }
 
+    // Navigate with new params
     router.push(`/roasters?${params.toString()}`);
   };
 
   const handleFilterChange = (newFilters: SearchFiltersType) => {
     setFilters(newFilters);
-    // Trigger search with new filters
-    const query = searchParams.get('q') || '';
-    handleSearch(query);
+    // Get current search query
+    const currentQuery = searchParams.get('q') || '';
+    // Trigger search with current query and new filters
+    handleSearch(currentQuery);
   };
 
   return (
@@ -52,7 +57,7 @@ export function SearchContainer() {
       <SearchFilters 
         onFilterChange={handleFilterChange}
         initialFilters={{
-          roastingStyles: searchParams.get('roastingStyles')?.split(',') || [],
+          roastingStyles: searchParams.get('roastingStyles')?.split(',').filter(Boolean) || [],
           city: searchParams.get('city') || undefined,
           state: searchParams.get('state') || undefined
         }}
