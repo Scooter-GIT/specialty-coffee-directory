@@ -1,25 +1,15 @@
 'use client';
 
-import { useState } from 'react';
-import { z } from 'zod';
-
-const filterSchema = z.object({
-  roastingStyles: z.array(z.string()).optional(),
-  location: z.object({
-    city: z.string().optional(),
-    state: z.string().length(2, 'State must be a 2-letter code').optional()
-  }).optional()
-});
-
-type Filters = z.infer<typeof filterSchema>;
+import { useState, useEffect } from 'react';
+import { SearchFiltersType } from './SearchContainer';
 
 interface SearchFiltersProps {
-  onFilterChange: (filters: Filters) => void;
+  onFilterChange: (filters: SearchFiltersType) => void;
+  initialFilters?: SearchFiltersType;
 }
 
-export const SearchFilters: React.FC<SearchFiltersProps> = ({ onFilterChange }) => {
-  const [filters, setFilters] = useState<Filters>({ roastingStyles: [] });
-  const [error, setError] = useState<string>();
+export function SearchFilters({ onFilterChange, initialFilters }: SearchFiltersProps) {
+  const [filters, setFilters] = useState<SearchFiltersType>(initialFilters || {});
 
   const roastingStyles = [
     'Light',
@@ -29,47 +19,74 @@ export const SearchFilters: React.FC<SearchFiltersProps> = ({ onFilterChange }) 
     'Single Origin'
   ];
 
-  const handleStyleChange = (style: string) => {
-    try {
-      const updatedStyles = filters.roastingStyles?.includes(style)
-        ? filters.roastingStyles.filter(s => s !== style)
-        : [...(filters.roastingStyles || []), style];
+  const states = [
+    'CA', 'NY', 'WA', 'OR', 'TX', // Add more as needed
+  ];
 
-      const newFilters = {
-        ...filters,
-        roastingStyles: updatedStyles
-      };
-
-      const validated = filterSchema.parse(newFilters);
-      setFilters(validated);
-      setError(undefined);
-      onFilterChange(validated);
-    } catch (err) {
-      if (err instanceof z.ZodError) {
-        setError(err.errors[0].message);
-      }
+  useEffect(() => {
+    if (initialFilters) {
+      setFilters(initialFilters);
     }
+  }, [initialFilters]);
+
+  const handleStyleChange = (style: string) => {
+    const currentStyles = filters.roastingStyles || [];
+    const newStyles = currentStyles.includes(style)
+      ? currentStyles.filter(s => s !== style)
+      : [...currentStyles, style];
+
+    const newFilters = {
+      ...filters,
+      roastingStyles: newStyles
+    };
+
+    setFilters(newFilters);
+    onFilterChange(newFilters);
+  };
+
+  const handleStateChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    const newFilters = {
+      ...filters,
+      state: e.target.value || undefined
+    };
+    setFilters(newFilters);
+    onFilterChange(newFilters);
   };
 
   return (
-    <div className="p-4 border rounded-lg">
-      <h3 className="font-semibold mb-4">Roasting Styles</h3>
-      <div className="space-y-2">
-        {roastingStyles.map((style) => (
-          <label key={style} className="flex items-center space-x-2">
-            <input
-              type="checkbox"
-              checked={filters.roastingStyles?.includes(style)}
-              onChange={() => handleStyleChange(style)}
-              className="rounded border-gray-300 text-brown-600 focus:ring-brown-500"
-            />
-            <span>{style}</span>
-          </label>
-        ))}
+    <div className="space-y-6 p-4 border rounded-lg bg-white shadow-sm">
+      <div>
+        <h3 className="font-semibold mb-3">Roasting Styles</h3>
+        <div className="space-y-2">
+          {roastingStyles.map((style) => (
+            <label key={style} className="flex items-center space-x-2">
+              <input
+                type="checkbox"
+                checked={filters.roastingStyles?.includes(style) || false}
+                onChange={() => handleStyleChange(style)}
+                className="rounded border-gray-300 text-brown-600 focus:ring-brown-500"
+              />
+              <span>{style}</span>
+            </label>
+          ))}
+        </div>
       </div>
-      {error && (
-        <p className="mt-2 text-sm text-red-600" role="alert">{error}</p>
-      )}
+
+      <div>
+        <h3 className="font-semibold mb-3">Location</h3>
+        <select
+          value={filters.state || ''}
+          onChange={handleStateChange}
+          className="w-full rounded-md border-gray-300 focus:border-brown-300 focus:ring focus:ring-brown-200"
+        >
+          <option value="">All States</option>
+          {states.map((state) => (
+            <option key={state} value={state}>
+              {state}
+            </option>
+          ))}
+        </select>
+      </div>
     </div>
   );
-};
+}
