@@ -2,6 +2,9 @@
 
 import { useState, useEffect } from 'react';
 import { SearchFiltersType } from './SearchContainer';
+import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
+import { Checkbox } from '@/components/ui/checkbox';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
 interface SearchFiltersProps {
   onFilterChange: (filters: SearchFiltersType) => void;
@@ -20,7 +23,7 @@ export function SearchFilters({ onFilterChange, initialFilters }: SearchFiltersP
   ];
 
   const states = [
-    'CA', 'NY', 'WA', 'OR', 'TX', // Add more as needed
+    'CA', 'NY', 'WA', 'OR', 'TX',
   ];
 
   useEffect(() => {
@@ -44,49 +47,62 @@ export function SearchFilters({ onFilterChange, initialFilters }: SearchFiltersP
     onFilterChange(newFilters);
   };
 
-  const handleStateChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+  const handleStateChange = (value: string) => {
     const newFilters = {
       ...filters,
-      state: e.target.value || undefined
+      state: value || undefined
     };
     setFilters(newFilters);
     onFilterChange(newFilters);
   };
 
   return (
-    <div className="space-y-6 p-4 border rounded-lg bg-white shadow-sm">
-      <div>
-        <h3 className="font-semibold mb-3">Roasting Styles</h3>
-        <div className="space-y-2">
-          {roastingStyles.map((style) => (
-            <label key={style} className="flex items-center space-x-2">
-              <input
-                type="checkbox"
-                checked={filters.roastingStyles?.includes(style) || false}
-                onChange={() => handleStyleChange(style)}
-                className="rounded border-gray-300 text-brown-600 focus:ring-brown-500"
-              />
-              <span>{style}</span>
-            </label>
-          ))}
+    <Card>
+      <CardHeader>
+        <CardTitle>Filters</CardTitle>
+      </CardHeader>
+      <CardContent className="space-y-6">
+        <div className="space-y-4">
+          <h3 className="font-medium">Roasting Styles</h3>
+          <div className="space-y-2">
+            {roastingStyles.map((style) => (
+              <div key={style} className="flex items-center space-x-2">
+                <Checkbox
+                  id={style}
+                  checked={filters.roastingStyles?.includes(style) || false}
+                  onCheckedChange={() => handleStyleChange(style)}
+                />
+                <label
+                  htmlFor={style}
+                  className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+                >
+                  {style}
+                </label>
+              </div>
+            ))}
+          </div>
         </div>
-      </div>
 
-      <div>
-        <h3 className="font-semibold mb-3">Location</h3>
-        <select
-          value={filters.state || ''}
-          onChange={handleStateChange}
-          className="w-full rounded-md border-gray-300 focus:border-brown-300 focus:ring focus:ring-brown-200"
-        >
-          <option value="">All States</option>
-          {states.map((state) => (
-            <option key={state} value={state}>
-              {state}
-            </option>
-          ))}
-        </select>
-      </div>
-    </div>
+        <div className="space-y-4">
+          <h3 className="font-medium">Location</h3>
+          <Select
+            value={filters.state}
+            onValueChange={handleStateChange}
+          >
+            <SelectTrigger>
+              <SelectValue placeholder="Select State" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="">All States</SelectItem>
+              {states.map((state) => (
+                <SelectItem key={state} value={state}>
+                  {state}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+      </CardContent>
+    </Card>
   );
 }

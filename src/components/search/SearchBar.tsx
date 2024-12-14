@@ -1,6 +1,9 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { Input } from '@/components/ui/input';
+import { Button } from '@/components/ui/button';
+import { Search } from 'lucide-react';
 
 interface SearchBarProps {
   onSearch: (query: string) => void;
@@ -20,22 +23,23 @@ export const SearchBar: React.FC<SearchBarProps> = ({ onSearch, initialQuery = '
   };
 
   return (
-    <form onSubmit={handleSubmit} className="w-full max-w-2xl mx-auto">
-      <div className="relative">
-        <input
-          type="text"
-          value={query}
-          onChange={(e) => setQuery(e.target.value)}
-          placeholder="Search for coffee roasters..."
-          className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-brown-300 focus:border-brown-300"
-        />
-        <button
-          type="submit"
-          className="absolute right-2 top-1/2 transform -translate-y-1/2 px-4 py-1 bg-brown-600 text-white rounded-md hover:bg-brown-700"
-        >
-          Search
-        </button>
-      </div>
+    <form onSubmit={handleSubmit} className="relative">
+      <Input
+        type="text"
+        value={query}
+        onChange={(e) => setQuery(e.target.value)}
+        placeholder="Search for coffee roasters..."
+        className="w-full pr-20"
+      />
+      <Button 
+        type="submit"
+        variant="default"
+        size="sm"
+        className="absolute right-1 top-1 h-8"
+      >
+        <Search className="h-4 w-4 mr-2" />
+        Search
+      </Button>
     </form>
   );
 };
