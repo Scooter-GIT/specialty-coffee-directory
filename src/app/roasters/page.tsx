@@ -1,6 +1,7 @@
 import { prisma } from '@/lib/prisma';
 import { RoasterList } from '@/components/roasters/RoasterList';
 import { SearchContainer } from '@/components/search/SearchContainer';
+import { Prisma } from '@prisma/client';
 
 interface RoastersPageProps {
   searchParams: { 
@@ -16,37 +17,48 @@ export default async function RoastersPage({ searchParams }: RoastersPageProps) 
   const page = Number(searchParams.page) || 1;
   const pageSize = 20;
 
-  const where = {
-    AND: [
-      // Search query
-      searchParams.q ? {
-        OR: [
-          { name: { contains: searchParams.q, mode: 'insensitive' } },
-          { description: { contains: searchParams.q, mode: 'insensitive' } }
-        ]
-      } : {},
-      
-      // Roasting styles
-      searchParams.roastingStyles ? {
-        roastingStyles: {
-          hasSome: searchParams.roastingStyles.split(',')
+  // Build where conditions
+  const whereConditions: Prisma.RoasterWhereInput = {};
+  
+  if (searchParams.q) {
+    whereConditions.OR = [
+      { 
+        name: { 
+          contains: searchParams.q,
+          mode: 'insensitive'
         }
-      } : {},
-      
-      // Location
-      searchParams.state ? { state: searchParams.state } : {},
-      searchParams.city ? { city: searchParams.city } : {}
-    ]
-  };
+      },
+      { 
+        description: { 
+          contains: searchParams.q,
+          mode: 'insensitive'
+        }
+      }
+    ];
+  }
+
+  if (searchParams.roastingStyles) {
+    whereConditions.roastingStyles = {
+      hasSome: searchParams.roastingStyles.split(',')
+    };
+  }
+
+  if (searchParams.state) {
+    whereConditions.state = searchParams.state;
+  }
+
+  if (searchParams.city) {
+    whereConditions.city = searchParams.city;
+  }
 
   const [roasters, total] = await Promise.all([
     prisma.roaster.findMany({
-      where,
+      where: whereConditions,
       skip: (page - 1) * pageSize,
       take: pageSize,
       orderBy: { name: 'asc' }
     }),
-    prisma.roaster.count({ where })
+    prisma.roaster.count({ where: whereConditions })
   ]);
 
   const totalPages = Math.ceil(total / pageSize);
