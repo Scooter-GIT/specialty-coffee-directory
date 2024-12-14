@@ -1,5 +1,5 @@
-import { type Roaster } from '@prisma/client';
 import { RoasterCard } from './RoasterCard';
+import type { Roaster } from '@prisma/client';
 
 interface RoasterListProps {
   roasters: Roaster[];
@@ -8,7 +8,7 @@ interface RoasterListProps {
 export const RoasterList: React.FC<RoasterListProps> = ({ roasters }) => {
   if (!roasters.length) {
     return (
-      <div className="text-center py-8">
+      <div className="text-center py-8 bg-gray-50 rounded-lg">
         <p className="text-gray-600">No roasters found</p>
       </div>
     );
